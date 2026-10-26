@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "interview_bank.py"
@@ -77,6 +78,15 @@ class BankTests(unittest.TestCase):
     def start(self, ids, mode="practice", profile="default"):
         return bank.start(self.root, ROLE, DIRECTION, AS_OF, mode=mode,
                           profile=profile, question_ids=ids)
+
+    def test_default_data_root_is_agent_independent_and_overrides_are_respected(self):
+        with mock.patch.dict(bank.os.environ, {}, clear=True), mock.patch.object(bank.Path, "home", return_value=self.root):
+            self.assertEqual(bank.parser().parse_args(["catalog"]).root, self.root / ".interview-data")
+        custom = self.root / "shared-data"
+        with mock.patch.dict(bank.os.environ, {"INTERNSHIP_INTERVIEW_DATA": str(custom)}, clear=True):
+            self.assertEqual(bank.parser().parse_args(["catalog"]).root, custom)
+            explicit = self.root / "explicit-data"
+            self.assertEqual(bank.parser().parse_args(["--root", str(explicit), "catalog"]).root, explicit)
 
     def test_window_contains_exactly_ninety_calendar_days(self):
         result = bank.window(AS_OF)

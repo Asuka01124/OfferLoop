@@ -21,7 +21,7 @@ description: 采集和更新最近90天的个人计算机实习面经，核验�
 python <skill>/scripts/interview_bank.py --root <data-root> --as-of YYYY-MM-DD catalog
 ```
 
-数据目录优先使用用户明确指定的位置，其次使用 `INTERNSHIP_INTERVIEW_DATA`，否则默认 `~/.codex/internship-interview-data`。第一次使用时告知实际位置；若宿主只允许写工作区，使用明确、稳定的工作区目录并告知后续继续使用同一路径。题库、采集报告、练习记录都放数据目录，不写进 Skill 源码。日期按 Asia/Shanghai；宿主提供不同用户时区时按用户当地日期显式传 `--as-of`。
+数据目录优先使用用户明确指定的位置，其次使用 `INTERNSHIP_INTERVIEW_DATA`，否则默认用户主目录下的 `~/.interview-data`，不随Codex、Claude Code等宿主改变。第一次使用时告知实际位置；若宿主限制写入该目录，申请必要的目录写权限，不静默改存工作区，以免不同Agent读到不同题库。题库、采集报告、练习记录都放数据目录，不写进 Skill 源码。日期按 Asia/Shanghai；宿主提供不同用户时区时按用户当地日期显式传 `--as-of`。
 
 开始对应模式前按需阅读：
 

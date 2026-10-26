@@ -16,7 +16,7 @@ Python 3.10+，无第三方依赖。全局选项 `--root`、`--as-of` 放在子�
 
 脚本做结构和一致性校验，无法自行证明AI填写的证据真实；调用者必须先读原帖。写入采用同目录临时文件加原子替换，并用数据目录写锁拒绝并发写入。题库和报告是两个独立文件，不是跨文件事务；发生磁盘错误时检查两者后重试，同一来源和问法可幂等导入。旧题和旧来源保留用于追溯，选题时过滤过期来源。
 
-默认路径为 `~/.codex/internship-interview-data`，可用环境变量 `INTERNSHIP_INTERVIEW_DATA` 或 `--root` 更改。若受工作区写权限约束，明确采用稳定的工作区数据目录。不要把用户的真实回答、简历或运行数据提交进Skill Git仓库。
+默认路径为用户主目录下的 `~/.interview-data`，在同一操作系统用户下与Agent名称和Skill安装位置无关。Windows示例为 `C:\Users\你的用户名\.interview-data`，macOS/Linux为 `~/.interview-data`。可用环境变量 `INTERNSHIP_INTERVIEW_DATA` 或 `--root` 更改，优先级为命令行、环境变量、默认目录。若宿主限制写入，申请该目录的必要写权限，不静默改存工作区。不同机器、WSL或不同系统用户拥有各自主目录，跨环境共用需要显式指定同一个可访问位置。不要把用户的真实回答、简历或运行数据提交进Skill Git仓库。
 
 ## 命令速查
 
@@ -24,7 +24,7 @@ Python 3.10+，无第三方依赖。全局选项 `--root`、`--as-of` 放在子�
 
 ```powershell
 $interviewScript = 'D:\codex-session\internship-interview\scripts\interview_bank.py'
-$interviewDataRoot = 'D:\codex-session\internship-interview-data'
+$interviewDataRoot = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.interview-data'
 python $interviewScript --root $interviewDataRoot window
 python $interviewScript --root $interviewDataRoot catalog
 python $interviewScript --root $interviewDataRoot sessions --profile 'default'

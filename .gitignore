@@ -3,5 +3,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 .internship-interview-data/
+.interview-data/
 data/
 *.tmp
