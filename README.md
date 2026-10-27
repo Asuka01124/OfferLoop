@@ -20,48 +20,105 @@ Agent 负责联网检索、阅读原帖、提取问题与评价回答；Python �
 - Python **3.10 或更新版本**；题库管理脚本仅依赖标准库。
 - 支持读取 `SKILL.md`、运行本地命令和读写文件的 Agent。
 - 采集时需要联网搜索、网页阅读能力，或由使用者提供可核验的原帖正文。
+- 选择下面的 Skills CLI 安装方式时，另需 Node.js **22.20 或更新版本**及 Git；手动安装无需 Node.js。
 
 题库按需建立，仓库中不附带真实面经题库或个人练习记录。
 
 ## 安装
 
-先克隆仓库，或下载 ZIP 后解压：
+### 方式一：一条命令安装（推荐）
+
+在终端运行 [Vercel Skills CLI](https://github.com/vercel-labs/skills) 的安装命令，按提示选择使用的 Agent：
 
 ```bash
-git clone https://github.com/Asuka01124/internship-interview.git
-cd internship-interview
+npx skills add Asuka01124/internship-interview --skill internship-interview -g
 ```
 
-将以下文件和目录复制到所用 Agent 的技能目录中：
+`-g` 表示安装到用户级目录，跨项目可用；去掉它则只安装到当前项目。安装器会识别本仓库根目录的 `SKILL.md`，下载技能及配套文件并处理目标目录，无需手动挑选文件。
+
+也可以直接指定 Agent。
+
+**Codex：**
+
+```bash
+npx skills add Asuka01124/internship-interview --skill internship-interview -g -a codex
+```
+
+**Claude Code：**
+
+```bash
+npx skills add Asuka01124/internship-interview --skill internship-interview -g -a claude-code
+```
+
+需要同时安装时，可使用 `-a codex claude-code`。Windows 中若符号链接不可用，可在命令末尾加 `--copy`。
+
+私有仓库的安装者需要仓库访问权限，并配置 Git、GitHub CLI 或 SSH 认证。仓库当前为私有；出现访问失败时先检查权限，安装命令不能替代仓库授权。详见 Skills CLI 的[安装与认证说明](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#private-repositories)。
+
+已经通过 Git 或 ZIP 下载到本机时，也可以直接让安装器读取本地目录。例如在下载的仓库根目录运行：
+
+```bash
+npx skills add . --skill internship-interview -g
+```
+
+本地来源安装适用于已下载的副本；后续有新版本时先更新这份本地副本，再重新安装。
+
+### 方式二：让 Codex 安装
+
+在 Codex 中输入：
 
 ```text
-internship-interview/
-├─ SKILL.md
-├─ README.md
-├─ agents/
-├─ references/
-├─ scripts/
-└─ tests/
+使用 $skill-installer，从 https://github.com/Asuka01124/internship-interview 安装根目录下的 internship-interview 技能。
 ```
+
+Codex 会调用自带的安装器。此方式无需手动运行 Python 安装脚本；私有仓库同样需要访问权限。安装完成后检查技能是否可见，若未出现再重启会话。
+
+### 方式三：手动安装（备用）
+
+将**完整仓库**克隆或解压到下面的目标目录，确保 `SKILL.md` 直接位于 `internship-interview/` 内，不再嵌套同名文件夹：
 
 | Agent | 个人技能目录 | 调用方式 |
 | --- | --- | --- |
-| Codex | `~/.codex/skills/internship-interview/` | `$internship-interview` |
+| Codex | `~/.agents/skills/internship-interview/` | `$internship-interview` |
 | Claude Code | `~/.claude/skills/internship-interview/` | `/internship-interview` |
 | 其他 Agent | 使用其支持的技能加载位置 | 让 Agent 读取 `SKILL.md` 并按指令执行 |
 
-Windows PowerShell 中，从本仓库根目录安装到 Codex 的示例：
+Windows PowerShell 中，直接安装到 Codex 用户级目录的示例：
 
 ```powershell
 $interviewUserHome = [Environment]::GetFolderPath('UserProfile')
-$interviewSkillTarget = Join-Path $interviewUserHome '.codex\skills\internship-interview'
-New-Item -ItemType Directory -Path $interviewSkillTarget -Force | Out-Null
-Copy-Item -Path '.\SKILL.md', '.\README.md', '.\agents', '.\references', '.\scripts', '.\tests' -Destination $interviewSkillTarget -Recurse
+$interviewSkillsParent = Join-Path $interviewUserHome '.agents\skills'
+$interviewSkillTarget = Join-Path $interviewSkillsParent 'internship-interview'
+if (Test-Path -LiteralPath $interviewSkillTarget) { throw 'Skill already exists; update its current installation.' }
+New-Item -ItemType Directory -Path $interviewSkillsParent -Force | Out-Null
+git clone --depth 1 https://github.com/Asuka01124/internship-interview.git $interviewSkillTarget
 ```
 
-安装到 Claude Code 时，将目标中的 `.codex` 改为 `.claude`。若同名技能已经存在，先确认版本，再决定更新。`agents/openai.yaml` 是 Codex 的展示元数据，核心流程由 `SKILL.md`、参考文档和 Python 脚本组成。
+macOS/Linux 的 Codex 示例：
 
-Claude Code 的技能加载位置及调用方式见[官方文档](https://code.claude.com/docs/zh-CN/skills)。安装后可在新的 Agent 会话中检查是否能发现该技能。
+```bash
+mkdir -p ~/.agents/skills
+git clone --depth 1 https://github.com/Asuka01124/internship-interview.git ~/.agents/skills/internship-interview
+```
+
+Claude Code 对应使用 `~/.claude/skills/`，Windows 示例中的 `.agents` 换为 `.claude`。同一 Agent 已有同名技能时，应更新现有安装，避免在多个目录重复安装。`agents/openai.yaml` 是 Codex 的展示元数据，核心流程由 `SKILL.md`、参考文档和 Python 脚本组成。
+
+以上目录对应[当前 Codex 官方文档](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)、[Claude Code 官方文档](https://code.claude.com/docs/zh-CN/skills)和 [Skills CLI 的 Agent 路径表](https://github.com/vercel-labs/skills/blob/main/docs/agents.md)。具体位置也可能受 Agent 配置或安装器版本影响，安装后以实际输出为准。
+
+### 检查安装与更新
+
+通过 Skills CLI 安装后，可以检查用户级安装列表：
+
+```bash
+npx skills list -g
+```
+
+按 Agent 筛选，例如 `npx skills list -g -a codex`。后续只更新本技能：
+
+```bash
+npx skills update internship-interview -g
+```
+
+手动安装的副本由所用下载或 Git 工作流更新。安装方式只影响技能文件的位置；题库和练习记录仍独立保存在 `~/.interview-data`。
 
 ## 快速开始
 
