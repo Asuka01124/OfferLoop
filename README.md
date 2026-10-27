@@ -1,4 +1,4 @@
-# 实习面试教练
+# OfferLoop
 
 一个面向计算机实习求职的 Agent Skill：收集最近 **90 天**发布的个人面经，按岗位和方向维护本地 JSON 题库，再开展逐题练习、模拟面试、评分和错题复习。
 
@@ -31,7 +31,7 @@ Agent 负责联网检索、阅读原帖、提取问题与评价回答；Python �
 在终端运行 [Vercel Skills CLI](https://github.com/vercel-labs/skills) 的安装命令，按提示选择使用的 Agent：
 
 ```bash
-npx skills add Asuka01124/internship-interview --skill internship-interview -g
+npx skills add Asuka01124/OfferLoop --skill offerloop -g
 ```
 
 `-g` 表示安装到用户级目录，跨项目可用；去掉它则只安装到当前项目。安装器会识别本仓库根目录的 `SKILL.md`，下载技能及配套文件并处理目标目录，无需手动挑选文件。
@@ -41,13 +41,13 @@ npx skills add Asuka01124/internship-interview --skill internship-interview -g
 **Codex：**
 
 ```bash
-npx skills add Asuka01124/internship-interview --skill internship-interview -g -a codex
+npx skills add Asuka01124/OfferLoop --skill offerloop -g -a codex
 ```
 
 **Claude Code：**
 
 ```bash
-npx skills add Asuka01124/internship-interview --skill internship-interview -g -a claude-code
+npx skills add Asuka01124/OfferLoop --skill offerloop -g -a claude-code
 ```
 
 需要同时安装时，可使用 `-a codex claude-code`。Windows 中若符号链接不可用，可在命令末尾加 `--copy`。
@@ -57,7 +57,7 @@ npx skills add Asuka01124/internship-interview --skill internship-interview -g -
 已经通过 Git 或 ZIP 下载到本机时，也可以直接让安装器读取本地目录。例如在下载的仓库根目录运行：
 
 ```bash
-npx skills add . --skill internship-interview -g
+npx skills add . --skill offerloop -g
 ```
 
 本地来源安装适用于已下载的副本；后续有新版本时先更新这份本地副本，再重新安装。
@@ -67,19 +67,19 @@ npx skills add . --skill internship-interview -g
 在 Codex 中输入：
 
 ```text
-使用 $skill-installer，从 https://github.com/Asuka01124/internship-interview 安装根目录下的 internship-interview 技能。
+使用 $skill-installer，从 https://github.com/Asuka01124/OfferLoop 安装根目录下的 offerloop 技能。
 ```
 
 Codex 会调用自带的安装器。此方式无需手动运行 Python 安装脚本；私有仓库同样需要访问权限。安装完成后检查技能是否可见，若未出现再重启会话。
 
 ### 方式三：手动安装（备用）
 
-将**完整仓库**克隆或解压到下面的目标目录，确保 `SKILL.md` 直接位于 `internship-interview/` 内，不再嵌套同名文件夹：
+将**完整仓库**克隆或解压到下面的目标目录，确保 `SKILL.md` 直接位于 `offerloop/` 内，不再嵌套同名文件夹：
 
 | Agent | 个人技能目录 | 调用方式 |
 | --- | --- | --- |
-| Codex | `~/.agents/skills/internship-interview/` | `$internship-interview` |
-| Claude Code | `~/.claude/skills/internship-interview/` | `/internship-interview` |
+| Codex | `~/.agents/skills/offerloop/` | `$offerloop` |
+| Claude Code | `~/.claude/skills/offerloop/` | `/offerloop` |
 | 其他 Agent | 使用其支持的技能加载位置 | 让 Agent 读取 `SKILL.md` 并按指令执行 |
 
 Windows PowerShell 中，直接安装到 Codex 用户级目录的示例：
@@ -87,17 +87,17 @@ Windows PowerShell 中，直接安装到 Codex 用户级目录的示例：
 ```powershell
 $interviewUserHome = [Environment]::GetFolderPath('UserProfile')
 $interviewSkillsParent = Join-Path $interviewUserHome '.agents\skills'
-$interviewSkillTarget = Join-Path $interviewSkillsParent 'internship-interview'
+$interviewSkillTarget = Join-Path $interviewSkillsParent 'offerloop'
 if (Test-Path -LiteralPath $interviewSkillTarget) { throw 'Skill already exists; update its current installation.' }
 New-Item -ItemType Directory -Path $interviewSkillsParent -Force | Out-Null
-git clone --depth 1 https://github.com/Asuka01124/internship-interview.git $interviewSkillTarget
+git clone --depth 1 https://github.com/Asuka01124/OfferLoop.git $interviewSkillTarget
 ```
 
 macOS/Linux 的 Codex 示例：
 
 ```bash
 mkdir -p ~/.agents/skills
-git clone --depth 1 https://github.com/Asuka01124/internship-interview.git ~/.agents/skills/internship-interview
+git clone --depth 1 https://github.com/Asuka01124/OfferLoop.git ~/.agents/skills/offerloop
 ```
 
 Claude Code 对应使用 `~/.claude/skills/`，Windows 示例中的 `.agents` 换为 `.claude`。同一 Agent 已有同名技能时，应更新现有安装，避免在多个目录重复安装。`agents/openai.yaml` 是 Codex 的展示元数据，核心流程由 `SKILL.md`、参考文档和 Python 脚本组成。
@@ -115,10 +115,14 @@ npx skills list -g
 按 Agent 筛选，例如 `npx skills list -g -a codex`。后续只更新本技能：
 
 ```bash
-npx skills update internship-interview -g
+npx skills update offerloop -g
 ```
 
 手动安装的副本由所用下载或 Git 工作流更新。安装方式只影响技能文件的位置；题库和练习记录仍独立保存在 `~/.interview-data`。
+
+### 从旧版本迁移
+
+项目原名为 `internship-interview`，现更名为 **OfferLoop**，技能标识统一为 `offerloop`。已有旧版安装的用户，应将技能安装更新为新名称，避免同时保留两个重复入口。题库、采集报告和练习记录继续使用原来的 `~/.interview-data`，无需迁移数据。
 
 ## 快速开始
 
@@ -127,19 +131,19 @@ npx skills update internship-interview -g
 在 Codex 中输入：
 
 ```text
-使用 $internship-interview，更新题库。
+使用 $offerloop，更新题库。
 ```
 
 Skill 会先询问岗位或方向。也可以一次说清楚：
 
 ```text
-使用 $internship-interview，更新 Java 后端实习题库，优先找字节和美团最近三个月的个人面经。
+使用 $offerloop，更新 Java 后端实习题库，优先找字节和美团最近三个月的个人面经。
 ```
 
 Claude Code 中使用对应命令：
 
 ```text
-/internship-interview 更新大模型 Agent 应用开发实习题库。
+/offerloop 更新大模型 Agent 应用开发实习题库。
 ```
 
 采集结束后会报告检索范围、候选与收录数量、待核验和排除原因、新增题量及实际数据位置。题量不足时会说明结果，不自动用旧题或生成题补齐。
@@ -147,11 +151,11 @@ Claude Code 中使用对应命令：
 ### 2. 开始面试
 
 ```text
-使用 $internship-interview，选择 Java 后端，进行 5 道题的逐题练习，每题回答后评分。
+使用 $offerloop，选择 Java 后端，进行 5 道题的逐题练习，每题回答后评分。
 ```
 
 ```text
-使用 $internship-interview，模拟一场大模型 Agent 开发实习面试，结束后统一评分。
+使用 $offerloop，模拟一场大模型 Agent 开发实习面试，结束后统一评分。
 ```
 
 未指定岗位时，Skill 会展示已有题库供选择。默认逐题练习、5 道题；每轮只展示一道主问题。
@@ -159,11 +163,11 @@ Claude Code 中使用对应命令：
 ### 3. 复习或继续
 
 ```text
-使用 $internship-interview，复习 Java 后端里我上次没答好的题。
+使用 $offerloop，复习 Java 后端里我上次没答好的题。
 ```
 
 ```text
-使用 $internship-interview，继续我上次没完成的面试。
+使用 $offerloop，继续我上次没完成的面试。
 ```
 
 多人共用时，指定不同的用户代号 `profile`，分别保存回答和成绩。

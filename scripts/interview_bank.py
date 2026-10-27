@@ -609,7 +609,7 @@ def plan(role, direction, as_of, company=None):
 
 
 def parser():
-    result = argparse.ArgumentParser(description="近期个人实习面经题库与面试记录")
+    result = argparse.ArgumentParser(description="OfferLoop：近期个人实习面经题库与面试记录")
     result.add_argument("--root", type=Path, default=Path(
         os.environ.get("INTERNSHIP_INTERVIEW_DATA") or Path.home() / ".interview-data"))
     result.add_argument("--as-of", type=day, default=today(), help="用户当地日期YYYY-MM-DD")

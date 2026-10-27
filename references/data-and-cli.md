@@ -23,7 +23,7 @@ Python 3.10+，无第三方依赖。全局选项 `--root`、`--as-of` 放在子�
 以下为PowerShell调用示意，先将路径赋值为当前环境的实际绝对路径：
 
 ```powershell
-$interviewScript = 'D:\codex-session\internship-interview\scripts\interview_bank.py'
+$interviewScript = 'D:\codex-session\OfferLoop\scripts\interview_bank.py'
 $interviewDataRoot = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.interview-data'
 python $interviewScript --root $interviewDataRoot window
 python $interviewScript --root $interviewDataRoot catalog

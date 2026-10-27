@@ -1,4 +1,4 @@
 interface:
-  display_name: "实习面试教练"
+  display_name: "OfferLoop"
   short_description: "采集近九十天个人实习面经，按岗位整理题库并开展模拟面试与评分"
-  default_prompt: "使用 $internship-interview，先询问我要更新哪个岗位的近九十天个人实习面经题库，或让我选择已有岗位开始面试。"
+  default_prompt: "使用 $offerloop，先询问我要更新哪个岗位的近九十天个人实习面经题库，或让我选择已有岗位开始面试。"
