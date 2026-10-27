@@ -39,20 +39,28 @@ def question(value="HashMap的底层实现是什么？", tags=None):
 
 
 def rubric():
-    return {"prepared_at": AS_OF.isoformat(), "reference_answer": "这是测试使用的参考答案。",
+    return {"scoring_version": 2, "question_kind": "基础问答", "assessment_target": "解释本题机制并提供依据",
+            "acceptable_alternatives": ["有依据的等价解释"],
+            "prepared_at": AS_OF.isoformat(), "reference_answer": "这是测试使用的参考答案。",
             "criteria": [{"id": "correctness", "label": "正确性", "max_points": 6,
-                          "expected": ["测试关键点"]},
+                          "expected": ["测试关键点"], "evidence_required": ["使用者解释机制"],
+                          "critical_errors": ["实现无法成立"]},
                          {"id": "reasoning", "label": "解释", "max_points": 4,
-                          "expected": ["测试边界"]}],
+                          "expected": ["测试边界"], "evidence_required": ["使用者解释条件与边界"]}],
             "references": [{"url": "https://example.com/docs", "title": "测试技术资料",
                             "checked_at": AS_OF.isoformat()}]}
 
 
 def response(qid, scores=(5, 3), answer_text="这是使用者的原始回答。"):
-    return {"question_id": qid, "answer": answer_text, "hints_used": 0,
-            "grade": {"criteria": [{"id": "correctness", "score": scores[0], "reason": "测试评分理由一"},
-                                   {"id": "reasoning", "score": scores[1], "reason": "测试评分理由二"}],
-                      "strengths": ["测试优点"], "gaps": ["测试遗漏"]}}
+    return {"question_id": qid, "answer": answer_text, "status": "scored",
+            "readiness": {"meaning_clear": True, "facts_checked": True, "reason": "测试语义和前提均已确认"},
+            "grade": {"criteria": [{"id": "correctness", "score": scores[0], "reason": "测试评分理由一",
+                                    "status": "assessed", "evidence_refs": ["initial"]},
+                                   {"id": "reasoning", "score": scores[1], "reason": "测试评分理由二",
+                                    "status": "assessed", "evidence_refs": ["initial"]}],
+                      "confirmed": [{"claim": "测试优点", "evidence_refs": ["initial"]}],
+                      "issues": [{"claim": "测试有证据支持的问题", "evidence_refs": ["initial"]}],
+                      "unverified": []}}
 
 
 class BankTests(unittest.TestCase):
@@ -290,6 +298,8 @@ class BankTests(unittest.TestCase):
         sid = self.start(ids)["session_id"]
         payload = response(ids[0], (6, 4))
         payload["hints_used"] = 1
+        payload["rounds"] = [{"id": "r1", "kind": "hint", "question": "实质性解题提示",
+                              "answer": "使用者提示后的回答", "origin": "generated"}]
         bank.answer(self.root, "default", sid, payload, AS_OF)
         self.assertEqual(bank.select(self.root, ROLE, DIRECTION, AS_OF, count=1, review="weak")["available"], 1)
 
@@ -297,14 +307,15 @@ class BankTests(unittest.TestCase):
         ids = self.ready(1)
         sid = self.start(ids)["session_id"]
         payload = response(ids[0])
-        payload["followups"] = [{"question": "模型新增的问题", "answer": "回答", "origin": "source"}]
+        payload["rounds"] = [{"id": "r1", "kind": "followup", "question": "模型新增的问题",
+                              "answer": "回答", "origin": "source"}]
         with self.assertRaises(ValueError):
             bank.answer(self.root, "default", sid, payload, AS_OF)
         with self.assertRaises(ValueError):
             bank.answer(self.root, "default", sid, response(ids[0], (0, 0), ""), AS_OF)
-        skipped = response(ids[0], (0, 0), "")
-        skipped["skipped"] = True
-        self.assertEqual(bank.answer(self.root, "default", sid, skipped, AS_OF)["feedback"]["score"], 0)
+        skipped = {"question_id": ids[0], "answer": "", "status": "skipped", "user_requested": True,
+                   "reason": "使用者明确要求跳过"}
+        self.assertIsNone(bank.answer(self.root, "default", sid, skipped, AS_OF)["feedback"]["score"])
 
     def test_explicit_question_id_is_not_lost_in_large_banks(self):
         ids = self.ready(105)

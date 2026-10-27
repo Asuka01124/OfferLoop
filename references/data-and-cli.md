@@ -40,7 +40,7 @@ python $interviewScript --root $interviewDataRoot summary --profile 'default' --
 
 `SESSION_ID`、`q_ID1` 等必须替换为上一步实际返回的ID，不是固定值。`sessions` 列出当前用户的会话，可据此继续尚未完成的面试；不返回评分或参考答案。面试停止时仅在使用者明确要求结束后给 `summary` 添加 `--finish`，这会将未完成会话标为提前结束；未答题不按零分计。
 
-`select/start` 支持 `--company '字节'`、可重复的 `--topic 'Redis'`（任一标签匹配）、`--review all|unseen|weak`、`--seed 42`。`select --ready` 只选已有评分表的题；默认也返回待准备题目。`weak` 指上次主问题得分低于7或使用过提示。默认 `all` 在覆盖知识点的同时优先未做题。`start --question-ids ...` 保留已准备题目的明确顺序，仍核验岗位、来源时效和筛选条件。未传ID则按 `--count` 自动选择已准备题，数量不足报错。
+`select/start` 支持 `--company '字节'`、可重复的 `--topic 'Redis'`（任一标签匹配）、`--review all|unseen|weak`、`--seed 42`。`select --ready` 只选已有v2评分表的题；默认也返回待准备题目。`weak` 只参考v2完整评分低于7或使用实质提示的记录，旧版低分、部分评价和中性澄清不作为弱项依据。默认 `all` 在覆盖知识点的同时优先未做题。`start --question-ids ...` 保留已准备题目的明确顺序，仍核验岗位、来源时效和筛选条件。未传ID则按 `--count` 自动选择已准备题，数量不足报错。
 
 `select` 输出是供面试官AI使用的内部信息，包含来源与可能存在的评分表；不要原样展示给使用者。`start/show` 仅输出当前题目和进度，不泄露答案。
 
@@ -92,7 +92,7 @@ python $interviewScript --root $interviewDataRoot summary --profile 'default' --
 - `personal_account/is_original` 必须是布尔值true，不能用字符串。`publication_kind` 必须为 `first_published`。
 - `interview_at` 未说明时填null，不能推算。`company/round/department` 未提供也可填null。`role` 使用本次确认的岗位分类，原始岗位写法可额外放 `role_original`。
 - `internship_type` 为 `日常实习`、`暑期实习`、`实习`、`转正面试`；最后一项限确为实习转正。
-- 题型 `kind` 为 `基础问答`、`算法编程`、`场景设计`、`项目追问`、`行为面试`。难度 `difficulty` 为 `基础`、`中等`、`深入`、`未评估`。
+- 题型 `kind` 为 `基础问答`、`算法编程`、`场景设计`、`故障排查`、`项目追问`、`行为面试`。难度 `difficulty` 为 `基础`、`中等`、`深入`、`未评估`。
 - `text` 是原始问法，`canonical_text` 是不改变约束的整理问法。算法题必须保留输入输出要求、约束和边界条件，不能只记一个算法标签。
 - 语义归并时加 `merge_into: "实际存在的q_ID"`，只有核对原题约束后才可使用；自动规范化保留C++、C#、不等号和小数等语义，不进行模糊匹配。
 - `experience_key` 由同一次面试的最初原帖或经核验的经历标识确定；缺省使用规范化URL。发现跨平台同次经历时须显式统一该值，否则不能宣称频次已跨站彻底去重。
@@ -100,48 +100,33 @@ python $interviewScript --root $interviewDataRoot summary --profile 'default' --
 
 ## 准备评分表
 
-根对象：`{"rubrics": [{"question_id": "实际题目ID", "rubric": {...}}]}`。每个rubric包含：
+完整字段与可复制的JSON形状见[评分v2的数据与交互](scoring-v2.md)。根对象为 `{"rubrics": [{"question_id": "实际题目ID", "rubric": {...}}]}`。必须先核对资料，再调用 `prepare`。
 
-```json
-{
-  "prepared_at": "2026-10-26",
-  "criteria": [
-    {"id": "correctness", "label": "技术正确性", "max_points": 5, "expected": ["结合题目所问版本解释正确的数据结构"]},
-    {"id": "coverage", "label": "关键点覆盖", "max_points": 2, "expected": ["解释定位、冲突处理和扩容"]},
-    {"id": "reasoning", "label": "原理与边界", "max_points": 2, "expected": ["区分版本差异和适用条件"]},
-    {"id": "clarity", "label": "表达", "max_points": 1, "expected": ["逻辑清楚，术语准确"]}
-  ],
-  "reference_answer": "此处必须写经过资料核对、适合口述的实际答案，不能直接复制字段示例。",
-  "common_mistakes": ["混淆实现细节与API保证"],
-  "references": [{"url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/HashMap.html", "title": "Java 21 HashMap API", "checked_at": "2026-10-26"}]
-}
-```
+新评分表使用 `scoring_version: 2`，声明本题的 `question_kind`、`assessment_target`、`acceptable_alternatives`，每个维度有 `evidence_required`。评分维度满分合计10分，关注可观察的理解与可行性，不能将参考答案作为关键词清单。题型必须匹配原题。`catalog` 的 `questions_prepared` 统计v2表，`questions_prepared_legacy` 单独统计旧表。
 
-各维度的expected必须是本题具体要求。引用资料必须实际支持参考答案；例如讨论红黑树实现时API文档不足，应另核对对应版本源码。示例日期均应换成本次真实日期。
+旧表仍可读取，但用于新面试时须重新核验并prepare为v2；不能只补版本号。`start` 保存当前题目和评分表的快照，后续题库更新不影响已开始的会话。
 
-## 回答与评分记录
+## 回答、续答与评分
 
-`answer` 输入示例形状：
+`answer` 可以多次保存同一道题，尚未完成时不推进题号。首次记录带原始 `answer`；以后省略或保留完全相同的值，补充回答写入 `rounds`，不能覆盖原文。
 
-```json
-{
-  "question_id": "实际题目ID",
-  "answer": "使用者的原始回答",
-  "hints_used": 0,
-  "grade": {
-    "criteria": [
-      {"id": "correctness", "score": 4, "reason": "指出回答中具体正确之处和错误"},
-      {"id": "coverage", "score": 1, "reason": "指出遗漏的本题关键点"},
-      {"id": "reasoning", "score": 1, "reason": "指出边界或原因解释的不足"},
-      {"id": "clarity", "score": 1, "reason": "表达清楚"}
-    ],
-    "strengths": ["基于实际回答填写"],
-    "gaps": ["基于冻结评分表填写"]
-  },
-  "followups": []
-}
-```
+| 场景 | 输入与行为 |
+| --- | --- |
+| 含义不清 | `status: pending_clarification`，附reason与中性next_prompt，不带分数 |
+| 事实争议 | `status: pending_verification`，记录明确claim、scope及未核验的evidence_checks |
+| 续答澄清 | 追加已完成的clarification轮次，附resolution；尚未结束时继续保存待处理状态 |
+| 核验完成 | 更新同ID核验结论，附匹配的来源与短证据，不得换主张或范围 |
+| 等待评分 | `status: ready_to_score`，确认歧义和争议已解除，暂不提交分数 |
+| 最终评分 | `status: scored`，附readiness和grade，评价本题全部交流 |
+| 主动跳过 | `status: skipped`、`user_requested: true`及reason，无grade、无分数 |
+| 无效题 | `status: invalid`及reason，无grade、无分数 |
 
-`followups` 可存 `{question, answer, origin: "source"|"generated", feedback}`；`source` 追问必须与已保存原帖追问一致。使用者明确跳过时传 `skipped: true`、空answer与各维度零分。不能用空回答代表尚未作答。
+每轮 `rounds` 只保存id、kind、origin、question、answer。kind区分clarification、followup、hint，原帖追问的origin为source且必须能找到原始记录；生成追问为generated。提示次数按hint轮次计算，澄清次数另记，不能在轮次中预存评分或反馈。
 
-脚本计算总分并校验维度，不接受调用者直接提供未经校验的total。练习模式立即返回评分和参考答案；模拟模式只返回进度，结束后通过summary统一揭晓。会话中的题目与评分表是开始时快照，后续更新题库不会改变已经开始的面试。
+grade覆盖全部维度，每个维度声明assessed或not_assessed；结论使用confirmed、issues、unverified三部分。已评价维度及确认、问题结论须引用使用者原答或对话，外部资料不能单独证明使用者掌握了什么。扣分须有具体问题和证据引用。
+
+未评价维度的score为null、证据数组为空，并说明未验证内容；脚本将结果标为partial，保留已评价部分分子与满分，总分为空，不补零、不折算满分。完整评价才计算0至10分。调用者不能自行提交未经校验的总分。
+
+练习模式在本题完成后返回反馈与参考答案；模拟模式只返回进度，结束后通过summary统一揭晓。`show` 返回已有问答、当前状态和待问问题，可恢复草稿。暂停无需finish；使用者明确要求提前结束时才调用 `summary --finish`，草稿仍保留为未评分。
+
+`summary` 提供scoring_version、score_groups、scored_questions、unscored_questions、pending_questions、hinted_answers及clarified_answers。partial、invalid、skipped和未答题不进入平均分。旧会话按v1读取或继续，原分数不重算；混合版本分别汇总，不生成混合平均分。分数只描述本次题目中的面试表现，不能代表整体开发能力。
