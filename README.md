@@ -1,8 +1,28 @@
-# OfferLoop
+# OfferLoop｜实习面经采集、面试题库与 AI 模拟面试 Skill
 
-一个面向计算机实习求职的 Agent Skill：收集最近 **90 天**发布的个人面经，按岗位和方向维护本地 JSON 题库，再开展逐题练习、模拟面试、评分和错题复习。
+**把近期个人面经变成你的岗位题库，在 Claude Code 或 Codex 中完成面试准备、模拟面试和错题复习。**
+
+OfferLoop 是面向计算机实习求职的 Agent Skill：收集最近 **90 天**发布的个人面经，按岗位和方向维护本地 JSON 面试题库，再根据你的回答澄清、追问和评分。适用于技术面试准备（technical interview preparation）与模拟面试（mock interview）。
+
+可以指定 Java 后端、前端开发、算法工程、大模型与 AI Agent 应用开发等岗位方向；题库按实际检索到的近期个人面经建立，每条题目保留原帖来源和日期。
+
+```bash
+npx skills add Asuka01124/OfferLoop --skill offerloop -g
+```
+
+[安装说明](#安装) · [快速开始](#快速开始) · [面经来源与时效](#面经收录规则) · [评分规则](#评分方式) · [反馈问题](https://github.com/Asuka01124/OfferLoop/issues)
 
 Agent 负责联网检索、阅读原帖、提取问题与评价回答；Python 脚本负责日期过滤、数据校验、增量保存、选题和练习记录。
+
+## 适合哪些面试准备场景
+
+| 你的需求 | OfferLoop 的做法 |
+| --- | --- |
+| 找近期计算机实习面经与面试题 | 按岗位、方向和可选公司检索近90天的个人原帖，核对正文、日期与实习身份 |
+| 整理 Java 后端、前端或 AI Agent 实习题库 | 提取具体问题与原帖追问，去重后按岗位和方向保存为本地JSON |
+| 在 Claude Code 或 Codex 中练习技术面试 | 从已有题库逐题提问；先理解回答，再基于证据反馈 |
+| 模拟一场面试并复盘 | 模拟模式中途不公布答案，结束后统一说明表现、问题与待验证能力 |
+| 继续上次练习或复习薄弱题 | 保存原始回答和后续交流，支持继续面试、未做题与薄弱题筛选 |
 
 ## 功能
 
@@ -53,7 +73,7 @@ npx skills add Asuka01124/OfferLoop --skill offerloop -g -a claude-code
 
 需要同时安装时，可使用 `-a codex claude-code`。Windows 中若符号链接不可用，可在命令末尾加 `--copy`。
 
-私有仓库的安装者需要仓库访问权限，并配置 Git、GitHub CLI 或 SSH 认证。仓库当前为私有；出现访问失败时先检查权限，安装命令不能替代仓库授权。详见 Skills CLI 的[安装与认证说明](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#private-repositories)。
+本仓库已公开，浏览、下载及通过HTTPS克隆无需 GitHub 账号。首次运行 `npx` 可能提示下载 Skills CLI；按上方环境要求准备 Node.js 和 Git 即可。
 
 已经通过 Git 或 ZIP 下载到本机时，也可以直接让安装器读取本地目录。例如在下载的仓库根目录运行：
 
@@ -71,7 +91,7 @@ npx skills add . --skill offerloop -g
 使用 $skill-installer，从 https://github.com/Asuka01124/OfferLoop 安装根目录下的 offerloop 技能。
 ```
 
-Codex 会调用自带的安装器。此方式无需手动运行 Python 安装脚本；私有仓库同样需要访问权限。安装完成后检查技能是否可见，若未出现再重启会话。
+Codex 会调用自带的安装器。此方式无需手动运行 Python 安装脚本。安装完成后检查技能是否可见，若未出现再重启会话。
 
 ### 方式三：手动安装（备用）
 
@@ -264,3 +284,9 @@ python -X utf8 -m unittest discover -s tests -v
 ```
 
 代码注释和文档字符串使用英文，技能说明和交互默认使用简体中文。
+
+## 反馈与贡献
+
+欢迎通过 [GitHub Issues](https://github.com/Asuka01124/OfferLoop/issues) 反馈安装失败、面经核验问题、题目归并错误或评分不合理的案例。请说明使用的Agent、操作步骤、预期行为与实际结果；涉及面经时尽量附可公开访问的原帖链接。
+
+可通过 Pull Request 改进检索策略、安装说明、评分规则或脚本。提交前运行上方测试；示例使用虚构数据，不提交个人练习记录、简历或完整面经转载。真实题库继续保存在使用者自己的 `~/.interview-data`。
